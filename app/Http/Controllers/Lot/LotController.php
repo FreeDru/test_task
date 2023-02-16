@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Lot;
 
 use App\Http\Controllers\Controller;
+use App\Http\Filters\LotFilter;
 use App\Http\Requests\Lot\FilterRequest;
 use App\Http\Requests\Lot\LotRequest;
 use App\Models\Category;
@@ -19,13 +20,11 @@ class LotController extends Controller
     public function index(FilterRequest $request): Response
     {
         $data = $request->validated();
-        $query = Lot::query();
+        $filter =app()->make(LotFilter::class, ['queryParams' => array_filter($data)]);
 
-        if(isset($data['category_id'])){
-            $query->where('category_id', $data['category_id']);
-        }
-
+        $query = Lot::filter($filter);
         $lots = $query->orderBy('created_at', 'desc')->simplePaginate(5);
+
         $categories = Category::all();
         
         return response()->view('lots.index', compact('lots', 'categories'));
